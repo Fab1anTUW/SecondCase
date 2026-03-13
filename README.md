@@ -1,6 +1,4 @@
-# SecondPose
-
-Code for "SecondPose: SE(3)-Consistent Dual-Stream Feature Fusion for Category-Level Pose Estimation", Preprint. [[Arxiv](https://arxiv.org/abs/2311.11125)]
+# SecondCase
 
 This project is an adaption of the original SecondPose, to work with a synthetic luggage dataset
 
@@ -87,12 +85,7 @@ python test_geodino.py --gpus 0 --test_epoch [YOUR EPOCH]
 In solver_category.py with the function test_func you can select if the results should be drawn. The drawn results are saved under log/CAMERA25/results/VI_Net_Geodino/epoch_[YOUR EPOCH]. New drawn results are only produced if the folder of the corresponding epoch does not exist.
 
 
-## Model Checkpoints
-
-
-
 ## Acknowledgements
 
 This repo is an adaption of the original SecondPose code, for the RobotVision lecture. [SecondPose](https://github.com/NOrangeeroli/SecondPose)
-Our implementation leverages the code from [VI-Net](https://github.com/JiehongLin/VI-Net), 
 
