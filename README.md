@@ -37,7 +37,7 @@ If error "ImportError: /lib/x86_64-linux-gnu/libc.so.6: version `GLIBC_2.32' not
 
 ## Data Processing
 
-1. Please refer to the work of [Self-DPDN](https://github.com/JiehongLin/Self-DPDN).
+1. Please refer to the Self-DPDN adaptation [Self-DPDN-SecondPose](https://github.com/Fab1anTUW/Self-DPDN-SecondCase)
 2. The Self-DPDN was adapted to work with the luggage dataset. For detail view the Self-DPDN-luggage README
 3. run data_preprocess.py
 4. Check the camera intrinsics in dataset_category & solver_category
