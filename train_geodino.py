@@ -32,7 +32,7 @@ def get_parser():
                         help="path to config file")
     parser.add_argument("--dataset",
                         type=str,
-                        default="REAL275",
+                        default="CAMERA25",
                         help="[REAL275 | CAMERA25]")
     parser.add_argument("--mod",
                         type=str,

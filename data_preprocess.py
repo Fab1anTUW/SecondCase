@@ -31,22 +31,28 @@ def load_stats_test(data_dir, dataset):
             dict_cat[int(cls)].append((path, instance))
     return dict_cat
 
-data_dir = "/media/student/Data/yamei/data/NOCS/"
+data_dir = './data/NOCS'
 
 camera_train_stats = load_stats_train(data_dir, 'camera', 'train_list.txt')
 with open(os.path.join(data_dir, 'camera', 'train_category_dict.json'), 'w') as fp:
     json.dump(camera_train_stats, fp)
+
+"""
 real_train_stats = load_stats_train(data_dir, 'real', 'train_list.txt')
 
 with open(os.path.join(data_dir, 'real', 'train_category_dict.json'), 'w') as fp:
     json.dump(real_train_stats, fp)
+"""
 
+# comment this function for training data_preprocess
 
 camera_test_stats = load_stats_test(data_dir, 'CAMERA25')
-import pdb;pdb.set_trace()
 with open(os.path.join(data_dir, 'detection', 'camera_test_category_dict.json'), 'w') as fp:
     json.dump(camera_test_stats, fp)
 
+#
+"""
 real_test_stats = load_stats_test(data_dir, 'REAL275')
 with open(os.path.join(data_dir, 'detection', 'real_test_category_dict.json'), 'w') as fp:
     json.dump(real_test_stats, fp)
+"""

@@ -34,7 +34,7 @@ def get_parser():
                         help="path to config file")
     parser.add_argument("--dataset",
                         type=str,
-                        default="REAL275",
+                        default="CAMERA25",
                         help="[REAL275 | CAMERA25]")
     parser.add_argument("--test_epoch",
                         type=int,
@@ -90,7 +90,7 @@ if __name__ == "__main__":
     r_model = r_model.cuda()
     # sim_model= sim_model.cuda()
 
-    checkpoint = os.path.join(cfg.log_dir, 'PN2', 'epoch_' + str(0) + '.pth')
+    checkpoint = os.path.join(cfg.log_dir, 'PN2', 'epoch_' + str(cfg.test_epoch)+ '.pth')
     logger.info("=> loading PN2 checkpoint from path: {} ...".format(checkpoint))
     gorilla.solver.load_checkpoint(model=ts_model, filename=checkpoint)
 
@@ -139,6 +139,7 @@ if __name__ == "__main__":
             drop_last=False
         )
     save_path = cfg.save_path + '/VI_Net_geodino/epoch_' + str(cfg.test_epoch) 
+    print("Length:", len(dataloder))
 
     if not os.path.isdir(save_path):
         os.makedirs(save_path)

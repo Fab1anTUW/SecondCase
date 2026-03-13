@@ -2,15 +2,14 @@
 
 Code for "SecondPose: SE(3)-Consistent Dual-Stream Feature Fusion for Category-Level Pose Estimation", Preprint. [[Arxiv](https://arxiv.org/abs/2311.11125)]
 
-
-
+This project is an adaption of the original SecondPose, to work with a synthetic luggage dataset
 
 ## Requirements
+The original requirements were changed due to incompabilities/problems.
 The code has been tested with
-- python 3.9
-- pytorch 1.13.0
-- CUDA 11.6
-
+- python 3.10
+- pytorch 2.3
+- CUDA 12.1
 Other dependencies:
 
 ```
@@ -20,8 +19,8 @@ requirements.txt
 Setup env:
 
 ```
-conda create -n secondpose python=3.9
-pip install torch==1.13.0+cu116 torchvision==0.14.0+cu116 torchaudio==0.13.0 --extra-index-url https://download.pytorch.org/whl/cu116
+conda create -n secondpose python=3.10
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
 cd lib/pointnet2/
 pip install .
 cd ../sphericalmap_utils/
@@ -31,15 +30,35 @@ pip install -r requirements.txt
 pip install open3d
 ```
 
+If error "ImportError: /lib/x86_64-linux-gnu/libc.so.6: version `GLIBC_2.32' not found" with pointnet2 or spherical occurs, try:
+
+- conda install gxx_linux-64
+- cd lib/pointnet2/
+- rm -rf build
+- rm -rf pointnet2/_ext.cpython-*-x86_64-linux-gnu.so
+
 ## Data Processing
 
 1. Please refer to the work of [Self-DPDN](https://github.com/JiehongLin/Self-DPDN).
-2. run data_preprocess.py
+2. The Self-DPDN was adapted to work with the luggage dataset. For detail view the Self-DPDN-luggage README
+3. run data_preprocess.py
+4. Check the camera intrinsics in dataset_category & solver_category
 
+## Data Layout
+
+The data layout is the same as in the NOCS datasets and should look something like this:
+
+NOCS
+-camera
+  -train
+  -val
+  ...
+- detection (for eval)
+- obj_models
+
+Self-DPDN-luggage should correctly format the dataset.
 
 ## Network Training
-
-
 Train SecondPose for rotation estimation:
 
 ```
@@ -49,29 +68,31 @@ python train_geodino.py --gpus 0 --mod r
 Train the network of [pointnet++](https://github.com/charlesq34/pointnet2) for translation and size estimation:
 
 ```
-python train.py --gpus 0  --mod ts 
+python train.py --gpus 0  --mod ts
 ```
 
 
 ## Evaluation
 
+For the evaluation prepare a inference dataset using Self-DPDN. (Details in the readme)
+If the inference images were added afterwards use data_preprocess.py and check if camera_test_stats = load_stats_test... is not active/not commented.
+
+
 To test the model, please run:
 
 ```
 python test_geodino.py --gpus 0 --test_epoch [YOUR EPOCH]
+
 ```
+In solver_category.py with the function test_func you can select if the results should be drawn. The drawn results are saved under log/CAMERA25/results/VI_Net_Geodino/epoch_[YOUR EPOCH]. New drawn results are only produced if the folder of the corresponding epoch does not exist.
+
 
 ## Model Checkpoints
 
-https://drive.google.com/file/d/1IafKC84XstivhUkm-4rF15KsSHaeBbic/view?usp=sharing
+
 
 ## Acknowledgements
 
+This repo is an adaption of the original SecondPose code, for the RobotVision lecture. [SecondPose](https://github.com/NOrangeeroli/SecondPose)
 Our implementation leverages the code from [VI-Net](https://github.com/JiehongLin/VI-Net), 
-
-## License
-Our code is released under MIT License (see LICENSE file for details).
-
-## Contact
-`yamei.chen@tum.de`
 

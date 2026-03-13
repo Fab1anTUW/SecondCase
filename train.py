@@ -14,8 +14,8 @@ sys.path.append(os.path.join(BASE_DIR, 'utils'))
 sys.path.append(os.path.join(BASE_DIR, 'lib', 'sphericalmap_utils'))
 sys.path.append(os.path.join(BASE_DIR, 'lib', 'pointnet2'))
 
-from solver import Solver, get_logger
-from dataset_pair import TrainingDataset
+from solver_category import Solver, get_logger
+from dataset_category import TrainingDataset
 
 def get_parser():
     parser = argparse.ArgumentParser(
@@ -32,7 +32,7 @@ def get_parser():
                         help="path to config file")
     parser.add_argument("--dataset",
                         type=str,
-                        default="REAL275",
+                        default="CAMERA25",
                         help="[REAL275 | CAMERA25]")
     parser.add_argument("--mod",
                         type=str,
