@@ -43,7 +43,7 @@ class TrainingDataset(Dataset):
         self.data_dir = config.data_dir
 
         syn_img_path = 'camera/train_list.txt'
-        self.syn_intrinsics = [577.5, 577.5, 319.5, 239.5]
+        self.syn_intrinsics = [1066.7779541015625, 1067.4870531406486, 640.0000000074506, 359.9999999952901]
         self.syn_img_list = [os.path.join(syn_img_path.split('/')[0], line.rstrip('\n'))
                         for line in open(os.path.join(self.data_dir, syn_img_path))]
         #self.syn_img_list = []#CHANGE THIS
@@ -285,7 +285,7 @@ class TestDataset():
         if dataset == 'REAL275':
             self.intrinsics = [591.0125, 590.16775, 322.525, 244.11084]
         else:
-            self.intrinsics = [577.5, 577.5, 319.5, 239.5]
+            self.intrinsics = [1066.7779541015625, 1067.4870531406486, 640.0000000074506, 359.9999999952901]
 
 
     def __len__(self):

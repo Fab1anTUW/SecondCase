@@ -12,7 +12,9 @@ import torch
 from torch.utils.data import Dataset
 import torchvision.transforms as transforms
 
-from data_utils import (
+
+# utils. added
+from utils.data_utils import (
     load_depth,
     load_composed_depth,
     get_bbox,
@@ -25,7 +27,7 @@ from data_utils import (
 
 defaultTrainconfig = {
    
-  'data_dir': '../../data/NOCS',
+  'data_dir': './data/NOCS',
   'sample_num': 2048,
   'random_rotate': True,
   'angle_range': 20
@@ -34,7 +36,7 @@ defaultTrainconfig = {
 class TrainingDataset(Dataset):
     def __init__(self,
             config, 
-            dataset='REAL275',
+            dataset='CAMERA25',
             mode='ts',
             num_img_per_epoch=-1,
             resolution=64,
@@ -62,11 +64,10 @@ class TrainingDataset(Dataset):
         except:
             self.sample_num = self.config['sample_num']
             self.data_dir = config['data_dir']
-        
 
         self.invalid_index = []
         syn_img_path = 'camera/train_list.txt'
-        self.syn_intrinsics = [577.5, 577.5, 319.5, 239.5]
+        self.syn_intrinsics = [533.38898, 711.65803, 320.0, 240.0]
         self.syn_img_list = [os.path.join(syn_img_path.split('/')[0], line.rstrip('\n'))
                         for line in open(os.path.join(self.data_dir, syn_img_path))]
         #self.syn_img_list = []#CHANGE THIS
@@ -82,7 +83,7 @@ class TrainingDataset(Dataset):
 
         if self.dataset == 'REAL275':
             real_img_path = 'real/train_list.txt'
-            self.real_intrinsics = [591.0125, 590.16775, 322.525, 244.11084]
+            self.real_intrinsics = [533.38898, 711.65803, 320.0, 240.0]
             self.real_img_list = [os.path.join(real_img_path.split('/')[0], line.rstrip('\n'))
                             for line in open(os.path.join(self.data_dir, real_img_path))]
             print('{} real images are found.'.format(len(self.real_img_list)))
@@ -290,7 +291,7 @@ class TrainingDataset(Dataset):
                 
                 img_path, instance_id ,_= self.real_category_dict[str(cat)][index]
                 cam_fx, cam_fy, cam_cx, cam_cy = self.real_intrinsics
-            return self._load_data(img_path,
+            return self._safe_load_data(img_path,
                                         instance_type, 
                                         cam_cx, cam_cy,cam_fx, cam_fy, instance_id)
         tuple = get_data(index)   
@@ -366,13 +367,10 @@ class TrainingDataset(Dataset):
                 
                 img_path, instance_id ,_= self.real_category_dict[str(cat)][index]
                 cam_fx, cam_fy, cam_cx, cam_cy = self.real_intrinsics
-            return self._load_data(img_path,
+            return self._safe_load_data(img_path,
                                         instance_type, 
                                         cam_cx, cam_cy,cam_fx, cam_fy, instance_id)
          
-
-            
-        
 
         tuple_first = get_data(index_first, cat)
         tuple_second = get_data(index_second, cat)
@@ -514,15 +512,25 @@ class TrainingDataset(Dataset):
 
         pts_raw = pts#.reshape(h,w,3)
         
-        
-
-        
-
         # rgb
+        """
         rgb = cv2.imread(img_path + '_color.png')[:, :, :3]
         rgb = rgb[:, :, ::-1] #480*640*3
         rgb_raw = rgb[rmin:rmax, cmin:cmax]
-        
+        """
+
+        # rgb - adpated
+        rgb_path = img_path + '_color.png'
+        rgb = cv2.imread(rgb_path)
+
+        if rgb is None:
+            print(f"Warning: {rgb_path} could not be loaded. Index {index} skipped.")
+            return None  # DataLoader sollte mit collate_fn None-Einträge ignorieren
+
+        rgb = rgb[:, :, :3]
+        rgb = rgb[:, :, ::-1]  # BGR -> RGB
+        rgb_raw = rgb[rmin:rmax, cmin:cmax]
+
         
         if not without_noise:
             rgb_raw = self.colorjitter(Image.fromarray(np.uint8(rgb_raw)))
@@ -611,6 +619,29 @@ class TrainingDataset(Dataset):
         else: 
             assert False
 
+    def _safe_load_data(self, img_path, img_type, cam_cx, cam_cy, cam_fx, cam_fy, instance_id=-1, without_noise=False): #test
+        """
+        Wrapper für _load_data: überspringt fehlerhafte Dateien (RGB, Depth, Mask).
+        Gibt None zurück, wenn ein Problem auftritt.
+        """
+        try:
+            tuple_instance = self._load_data(img_path, img_type, cam_cx, cam_cy, cam_fx, cam_fy,
+                                            instance_id=instance_id, without_noise=without_noise)
+            if tuple_instance is None:
+                # _load_data selbst hat schon None zurückgegeben (z.B. kein choose)
+                self.invalid_index.append(img_path)
+                return None
+
+            return tuple_instance
+        except FileNotFoundError as e:
+            print(f"Warning: File not found: {e}. Skipping {img_path}")
+            self.invalid_index.append(img_path)
+            return None
+        except Exception as e:
+            print(f"Warning: Failed to load {img_path}: {e}. Skipping.")
+            self.invalid_index.append(img_path)
+            return None
+
 
     def _read_instance(self, image_index):
         assert self.mode == 'ts'
@@ -623,7 +654,7 @@ class TrainingDataset(Dataset):
             image_index = -image_index-1
             img_path = os.path.join(self.data_dir, self.real_img_list[image_index])
             cam_fx, cam_fy, cam_cx, cam_cy = self.real_intrinsics
-        tuple_instance = self._load_data(img_path,
+        tuple_instance = self._safe_load_data(img_path,
                                                         img_type, 
                                                         cam_cx, cam_cy,cam_fx, cam_fy)
         if tuple_instance is None:
@@ -638,6 +669,7 @@ class TrainingDataset(Dataset):
         ret_dict['translation_label'] = torch.FloatTensor(translation)
         ret_dict['size_label'] = torch.FloatTensor(size)
         return ret_dict
+    
     def _read_instance_from_category_dict(self, cls, idx ):
         img_path, instance_id, img_type = self.reference_category_dict[str(cls)][idx]
         
@@ -650,7 +682,7 @@ class TrainingDataset(Dataset):
             
             
             cam_fx, cam_fy, cam_cx, cam_cy = self.syn_intrinsics
-        tuple_instance = self._load_data(img_path,
+        tuple_instance = self._safe_load_data(img_path,
                                         img_type, 
                                         cam_cx, cam_cy,cam_fx, cam_fy, instance_id = instance_id,without_noise=True)
         if tuple_instance is None:
@@ -676,6 +708,7 @@ class TrainingDataset(Dataset):
         ret_dict['choose'] = torch.IntTensor(choose).long()
         ret_dict['mask'] = torch.IntTensor(mask).long()
         return ret_dict
+    
     def get_ref_data(self, clss, indexes):
         data_list = []
         assert len(clss) == len(indexes)
@@ -702,11 +735,14 @@ class TrainingDataset(Dataset):
 
 
 class TestDataset():
-    def __init__(self, config, dataset='REAL275', resolution=64, ds_rate = 2, for_sim_feature = False):
+    def __init__(self, config, dataset, resolution=64, ds_rate = 2, for_sim_feature = False):
+    #def __init__(self, dataset='CAMERA25', resolution=64, ds_rate = 2, for_sim_feature = False): #für eigene eval
         self.dataset = dataset
         self.resolution = resolution
         self.data_dir = config.data_dir
         self.sample_num = config.sample_num
+        #self.data_dir = './data/NOCS' #für eigene eval
+        #self.sample_num = 2048     #für eigene eval
         # self.match_sample_num = 128
         # self.raw_size = 840
         self.num_patches = 15
@@ -748,9 +784,9 @@ class TestDataset():
         self.sym_ids = [0, 1, 3]    # 0-indexed
         self.norm_scale = 1000.0    # normalization scale
         if dataset == 'REAL275':
-            self.intrinsics = [591.0125, 590.16775, 322.525, 244.11084]
+            self.intrinsics = [533.38898, 711.65803, 320.0, 240.0]
         else:
-            self.intrinsics = [577.5, 577.5, 319.5, 239.5]
+            self.intrinsics = [533.38898, 711.65803, 320.0, 240.0]
 
 
     def __len__(self):
@@ -835,19 +871,29 @@ class TestDataset():
             pred_data = cPickle.load(f)
         
         image_path = os.path.join(self.data_dir, pred_data['image_path'][5:])
-        # print(image_path)
         pred_mask = pred_data['pred_masks']
+        if pred_mask.shape[0] != 480 or pred_mask.shape[1] != 640:      # resize added
+            resized_masks = []
+            for i in range(pred_mask.shape[2]):
+                resized_masks.append(cv2.resize(pred_mask[:,:,i], (640, 480), interpolation=cv2.INTER_NEAREST))
+            pred_mask = np.stack(resized_masks, axis=2)
+
+
         num_instance = len(pred_data['pred_class_ids'])
         assert instance_id<= num_instance-1
         assert type(instance_id) is int
 
         # rgb
         rgb = cv2.imread(image_path + '_color.png')[:, :, :3]
+        if rgb.shape[0] != 480 or rgb.shape[1] != 640:      #resize added
+            rgb = cv2.resize(rgb, (640, 480))
         rgb = rgb[:, :, ::-1] #480*640*3
 
         # pts
         cam_fx, cam_fy, cam_cx, cam_cy = self.intrinsics
         depth = load_depth(image_path) #480*640
+        if depth.shape[0] != 480 or depth.shape[1] != 640:      #resize added
+            depth = cv2.resize(depth, (640, 480), interpolation=cv2.INTER_NEAREST)
         if self.dataset == 'REAL275':
             depth = fill_missing(depth, self.norm_scale, 1)
 
@@ -875,6 +921,12 @@ class TestDataset():
                 inst_mask = 255 * pred_mask[:, :, j].astype('uint8')
                 mask = inst_mask > 0
                 mask = np.logical_and(mask, depth>0)
+
+                #Debug
+                print("Instance", j)
+                print("mask sum:", np.sum(mask))
+
+
                 if np.sum(mask) > 16:
                     rmin, rmax, cmin, cmax = get_bbox_from_mask(mask)
                     cat_id = pred_data['pred_class_ids'][j] - 1 # convert to 0-indexed
@@ -937,6 +989,12 @@ class TestDataset():
             ret_dict['gt_scales'] = torch.tensor(pred_data['gt_scales'])
             ret_dict['gt_handle_visibility'] = torch.tensor(pred_data['gt_handle_visibility'])
             #ret_dict['index'] = index
+
+
+            #Debug
+            print("num_instance:", num_instance)
+            print("all_pts length:", len(all_pts))
+
 
             if len(all_pts) == 0:
                 ret_dict['pred_class_ids'] = torch.tensor(pred_data['pred_class_ids'])
