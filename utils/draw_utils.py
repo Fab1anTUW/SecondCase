@@ -211,12 +211,13 @@ def draw_detections(image, save_dir, data_name, image_id, intrinsics,
 
         if gt_RTs is not None:
             for ind, RT in enumerate(gt_RTs):
+
                 xyz_axis = 0.3*np.array([[0, 0, 0], [0, 0, 1], [0, 1, 0], [1, 0, 0]]).transpose()
                 transformed_axes = transform_coordinates_3d(xyz_axis, RT)
                 projected_axes = calculate_2d_projections(transformed_axes, intrinsics)
 
 
-                bbox_3d = get_3d_bbox(gt_scales[ind], 0)
+                bbox_3d = get_3d_bbox(gt_scales[ind, :], 0)
                 transformed_bbox_3d = transform_coordinates_3d(bbox_3d, RT)
                 projected_bbox = calculate_2d_projections(transformed_bbox_3d, intrinsics)
                 draw_image_bbox = draw(draw_image_bbox, projected_bbox, projected_axes, (255, 0, 0))

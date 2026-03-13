@@ -1,0 +1,8 @@
+setup.py
+/mnt/c/Users/Fabsa/Desktop/Studium/Master/7_Semester/Robot_Vision/Code/SecondPose-main/lib/sphericalmap_utils/_ext_src/src/bindings.cpp
+/mnt/c/Users/Fabsa/Desktop/Studium/Master/7_Semester/Robot_Vision/Code/SecondPose-main/lib/sphericalmap_utils/_ext_src/src/sphericalmap.cpp
+/mnt/c/Users/Fabsa/Desktop/Studium/Master/7_Semester/Robot_Vision/Code/SecondPose-main/lib/sphericalmap_utils/_ext_src/src/sphericalmap_cuda.cu
+spherical.egg-info/PKG-INFO
+spherical.egg-info/SOURCES.txt
+spherical.egg-info/dependency_links.txt
+spherical.egg-info/top_level.txt

@@ -946,7 +946,7 @@ def plot_mAP(
 
 def evaluate(path, logger=None):
     synset_names = ['BG',  # 0
-                    'bottle',  # 1
+                    'luggage',  # 1 originally bottle
                     'bowl',  # 2
                     'camera',  # 3
                     'can',  # 4
@@ -956,6 +956,8 @@ def evaluate(path, logger=None):
     result_pkl_list = glob.glob(os.path.join(path, 'results*.pkl'))
     result_pkl_list = sorted(result_pkl_list)
     print('image num: {}'.format(len(result_pkl_list)))
+
+    #print("List:", result_pkl_list) #debug
 
     final_results = []
     for pkl_path in result_pkl_list:
@@ -976,6 +978,7 @@ def evaluate(path, logger=None):
             final_results.append(result)
         else:
             assert False
+    #print("Final results:", final_results) #debug
 
     # print("Compute combined mAP: ")
     # compute_combination_mAP(final_results, synset_names,
@@ -983,6 +986,7 @@ def evaluate(path, logger=None):
     #                         shift_thresholds=[0.05, 0.1, 0.2],
     #                         iou_3d_thresholds=[0.25, 0.50, 0.75])
 
+  
     print("Compute independent mAP: ")
     compute_independent_mAP(final_results, synset_names,
                             degree_thresholds=[5, 10],
@@ -995,5 +999,6 @@ def evaluate(path, logger=None):
                             iou_3d_thresholds=[0.10, 0.25, 0.50, 0.75],
                             logger=logger)
 
+ 
 
 

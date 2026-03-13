@@ -206,6 +206,7 @@ def test_func(ts_model, r_model, dataloder, save_path):
             ### prediction
 
             if 'pts' in data.keys():
+
                 center = data['center'][0].cuda()
 
 
@@ -325,7 +326,7 @@ def test_func(ts_model, r_model, dataloder, save_path):
                 result['pred_scales'] = np.ones((ninstance, 3))
 
 
-            draw = False
+            draw = True
             if draw:
                 index = data['index'].item()
                 path = dataloder.dataset.result_pkl_list[index]
@@ -333,17 +334,17 @@ def test_func(ts_model, r_model, dataloder, save_path):
                     data = cPickle.load(f)
                 image_path = data['image_path'][5:]
                 image_path = os.path.join(
-                    '/media/student/Data/yamei/data/NOCS/', image_path)
+                    '/home/fabian/SecondPose-luggage/data/NOCS/', image_path)
                 image_path_parsing = image_path.split('/')
 
                 # rgb
                 import cv2
                 # import numpy as np
                 from draw_utils import draw_detections
-
+                
                 image = cv2.imread(image_path + '_color.png')[:, :, :3]
                 image = image[:, :, ::-1] #480*640*3
-                intrinsics = np.array([[591.0125, 0, 322.525], [0, 590.16775, 244.11084], [0, 0, 1]])
+                intrinsics = np.array([[533.38898, 0.0, 320.0],[0.0, 711.65803, 240.0],[0.0, 0.0, 1.0]])
 
 
                 if not os.path.isdir(os.path.join(save_path, 'draw')):
@@ -351,7 +352,7 @@ def test_func(ts_model, r_model, dataloder, save_path):
                 draw_detections(image, os.path.join(save_path, 'draw'), 'real_test', image_path_parsing[-2]+'_'+image_path_parsing[-1], intrinsics,
                                     result['gt_bboxes'], None, None, result['gt_RTs'], result['gt_scales'],
                                     result['pred_bboxes'], result['pred_class_ids'], None, result['pred_RTs'], None, result['pred_scales'],
-                                    draw_gt=False, draw_pred=True)
+                                    draw_gt=True, draw_pred=True)
 
 
             t.set_description(
@@ -359,8 +360,6 @@ def test_func(ts_model, r_model, dataloder, save_path):
             )
 
             t.update(1)
-
-
 
 
 class tools_writer():
